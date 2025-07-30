@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Postyyy</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="shortcut icon" href="/download.png" type="image/x-icon">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Unbounded', sans-serif;
+      background: url('/658427ed-aa5f-468a-94c5-ebfd45ee6a7e.png') no-repeat center center/cover;
+      /* background: linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(238, 78%, 73%, 1) 100%); */
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 3rem;
+      color: #3a2f2f;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .post-input {
+      background: transparent;
+      padding: 20px;
+      border: 2px dashed #b48c6c;
+      border-radius: 15px;
+      margin-bottom: 30px;
+
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 1rem;
+      background: transparent;
+      resize: none;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 10px;
+      background-color: #eb9d5e;
+      color: white;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.7;
+    }
+   .color-red {
+      background-color: rgb(255, 0, 0);
+    }
+    .posts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .post {
+      display: flex;
+      flex-direction: column;
+      width: 240px;
+      background: transparent;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .post p {
+      margin-bottom: 10px;
+      flex-shrink: 1;
+    }
+
+    .post-buttons {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+    }
+
+
+    .post-buttons button {
+      flex: 1;
+      margin-right: 5px;
+      padding: 5px;
+      border: none;
+      border-radius: 7px;
+      background: #ebd9b4;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: #3a2f2f;
+    }
+
+    .post-buttons button:hover {
+      background: #d8c199;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Postyyy</h1>
+  <div class="container">
+    <div class="post-input">
+      <textarea id="postText" placeholder="Write your thoughts here..."></textarea>
+      <button class="btn" onclick="addPost()">+ Add Post</button>
+      <button class="btn color-red" onclick="deleteAll()">🧹 Delete All</button>
+    </div>
+
+    <div class="posts" id="postsContainer"></div>
+  </div>
+
+  <script>
+    let posts = JSON.parse(localStorage.getItem("posts")) || [];
+
+    function savePosts() {
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
+
+    function renderPosts() {
+      const container = document.getElementById("postsContainer");
+      container.innerHTML = "";
+
+      posts.forEach((post, index) => {
+        const postDiv = document.createElement("div");
+        postDiv.className = "post";
+        postDiv.style.background = post.bg || post.color || "#fffbe0";
+        postDiv.style.color = post.textColor || "#000";
+
+        postDiv.innerHTML = `
+      <p style="color: ${post.textColor || "#000"}">${post.text}</p>
+  <div class="post-buttons">
+    <button onclick="editPost(${index})">Edit</button>
+    <button onclick="deletePost(${index})">Delete</button>
+    <button onclick="changeBackground(${index})">🎨 Style</button>
+  </div>
+`;
+
+
+        container.appendChild(postDiv);
+      });
+    }
+
+    function addPost() {
+      const text = document.getElementById("postText").value.trim();
+      if (!text) {
+        Swal.fire("Empty Post", "Write something before adding!", "warning");
+        return;
+      }
+
+      posts.push({ text, color: "#fffbe0", bg: "#fffbe0" });
+      document.getElementById("postText").value = "";
+      savePosts();
+      renderPosts();
+    }
+
+    function editPost(index) {
+      Swal.fire({
+        title: "Edit Post",
+        input: "textarea",
+        inputValue: posts[index].text,
+        showCancelButton: true,
+        confirmButtonText: "Update",
+        cancelButtonText: "Cancel"
+      }).then(result => {
+        if (result.isConfirmed && result.value.trim() !== "") {
+          posts[index].text = result.value.trim();
+          savePosts();
+          renderPosts();
+        }
+      });
+    }
+
+    function deletePost(index) {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "This will delete the post!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Delete",
+        cancelButtonText: "Cancel"
+      }).then(result => {
+        if (result.isConfirmed) {
+          posts.splice(index, 1);
+          savePosts();
+          renderPosts();
+          Swal.fire("Deleted!", "Post has been removed.", "success");
+        }
+      });
+    }
+
+    function deleteAll() {
+      Swal.fire({
+        title: "Delete All Posts?",
+        text: "You won't be able to recover them!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Yes, delete all",
+        cancelButtonText: "Cancel"
+      }).then(result => {
+        if (result.isConfirmed) {
+          posts = [];
+          savePosts();
+          renderPosts();
+          Swal.fire("All Deleted!", "All posts removed.", "success");
+        }
+      });
+    }
+    function changeBackground(index) {
+      Swal.fire({
+        title: "Select Background",
+        html: `
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        ${["#fffbe0", "#e6c3c9", "#e0f7fa", "#f0fff0", "#2f2f2f", "#333", "#444", "#1a1a1a", "#0d0d0d"].map(bg => `
+          <div onclick="setBG(${index}, '${bg}')" 
+               style="width:40px;height:40px;background:${bg};cursor:pointer;border:1px solid #333;"></div>
+        `).join("")}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        ${[
+            "linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(238, 78%, 73%, 1) 100%)",
+            "linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(154, 78%, 73%, 1) 100%)",
+            "linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(332, 78%, 73%, 1) 74%)",
+            "linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(63, 78%, 73%, 1) 79%)",
+            "linear-gradient(45deg, #2c3e50, #4ca1af)",
+            "linear-gradient(45deg, #141e30, #243b55)",
+            "linear-gradient(45deg, #434343, #000000)",
+            "linear-gradient(45deg, #3a3a3a, #1a1a1a)",
+            "linear-gradient(45deg, #0f2027, #203a43, #2c5364)"
+          ].map(bg => `
+          <div onclick="setBG(${index}, '${bg}')" 
+               style="width:40px;height:40px;background:${bg};cursor:pointer;border:1px solid #333;"></div>
+        `).join("")}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        ${[
+            "url(https://images.unsplash.com/photo-1613484259733-383234e8e8af?q=80&w=1079&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
+            "url(https://img.freepik.com/premium-photo/old-rough-texture-surface_653217-4072.jpg)",
+            "url(https://images.unsplash.com/photo-1699559052658-77513a430865?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
+            "url(https://png.pngtree.com/background/20250110/original/pngtree-yellow-texture-background-for-poster-banner-or-posts-picture-image_15963877.jpg)",
+            "url(https://images.unsplash.com/photo-1690389334466-9684dbf88c05?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
+            "url(https://img.freepik.com/free-photo/grunge-background-with-vintage-texture_1048-10237.jpg)",
+            "url(https://img.freepik.com/free-photo/crumpled-white-paper-texture_1194-7548.jpg)",
+            "url(https://images.unsplash.com/photo-1669286213569-42d82d78e9f6?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
+            "url(https://images.unsplash.com/photo-1555795078-4c593b175a45?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)"
+          ].map(bg => `
+          <div onclick="setBG(${index}, '${bg}')" 
+               style="width:40px;height:40px;background:${bg} center/cover;cursor:pointer;border:1px solid #333;"></div>
+        `).join("")}
+      </div>
+    `,
+        showConfirmButton: false
+      });
+    }
+
+    function setBG(index, bg) {
+      posts[index].bg = bg;
+
+      const isDark = typeof bg === "string" && (
+        bg.includes("linear-gradient") ||
+        bg.includes("url") ||
+        ["#2f2f2f", "#333", "#444", "#1a1a1a", "#0d0d0d"].includes(bg)
+      );
+      posts[index].textColor = isDark ? "#fff" : "#000";
+
+      savePosts();
+      renderPosts();
+      Swal.close();
+    }
+
+    function setBG(index, bg) {
+      posts[index].bg = bg;
+
+      const lightGradients = [
+        "linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(154, 78%, 73%, 1) 100%)",
+        "linear-gradient(45deg, hsla(0, 0%, 90%, 1) 0%, hsla(63, 78%, 73%, 1) 79%)"
+      ];
+
+      const Dark = (
+        bg.includes("url") ||
+        (!lightGradients.includes(bg) && bg.includes("linear-gradient")) ||
+        ["#2f2f2f", "#333", "#444", "#1a1a1a", "#0d0d0d"].includes(bg)
+      );
+
+      posts[index].textColor = Dark ? "#fff" : "#000";
+
+      savePosts();
+      renderPosts();
+      Swal.close();
+    }
+
+    function changeColor(index) {
+      const colors = ["#fffbe0", "#fef0e6", "#f0fff0", "#black", "#fff0f5"];
+      const current = colors.indexOf(posts[index].color);
+      posts[index].color = colors[(current + 1) % colors.length];
+      savePosts();
+      renderPosts();
+    }
+
+    renderPosts();
+  </script>
+
+</body>
+
+</html>
